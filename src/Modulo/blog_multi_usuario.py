@@ -95,26 +95,191 @@ def _parsear_tags(tags: Any) -> List[str]:
                           "por comas.")
 
 def _generar_id(items: List[Dict[str, Any]], clave_id: str) -> int:
-    pass
+    """Genera un ID entero autoincremental.
+
+    Busca el máximo valor de 'clave_id' y retorna el siguiente.
+
+    Args:
+        items: Lista de diccionarios fuente.
+        clave_id: Nombre de la clave que contiene el ID.
+
+    Returns:
+        int: ID siguiente (1 si la lista está vacía o inválida).
+    """
+    if not items:
+        return 1
+    try:
+        max_id = max(int(it.get(clave_id, 0)) for it in items)
+    except ValueError:
+        max_id = 0
+    return max_id + 1
 def _generar_id_comentario(post: Dict[str, Any]) -> int:
-    pass
+    """Genera un ID autoincremental para comentarios de un post.
+
+    Args:
+        post: Diccionario del post (con su lista 'comentarios').
+
+    Returns:
+        int: Siguiente ID de comentario.
+    """
+    comentarios = post.get("comentarios") or []
+    if not comentarios:
+        return 1
+    try:
+        max_id = max(int(c.get("id_comentario", 0)) for c in comentarios)
+    except ValueError:
+        max_id = 0
+    return max_id + 1
+
+
 def crear_autor(autores_filepath: str, nombre_autor: str, email: str, password_hash: str
-    pass
+= "") -> Dict[str, Any]:
+    """Crea un nuevo autor.
+
+        Valida el email y su unicidad, y persiste el registro en CSV.
+
+        Args:
+            autores_filepath: Ruta al CSV de autores.
+            nombre_autor: Nombre a mostrar del autor.
+            email: Correo electrónico único.
+            password_hash: Hash de la contraseña del autor (opcional).
+
+        Returns:
+            Dict[str, Any]: Autor creado.
+
+        Raises:
+            ValidacionError: Si faltan datos o el formato es inválido.
+            EmailDuplicado: Si el email ya existe.
+        """
+    if not _es_str_no_vacio(nombre_autor):
+        raise ValidacionError("El nombre del autor es obligatorio.")
+    _validar_email(email)
+
+    autores = gestor_datos.cargar_datos(autores_filepath)
+
+    if any(a.get("email", "").strip().lower() == email.strip().lower()
+           for a in autores):
+        raise EmailDuplicado(f"El email '{email}' ya se encuentra registrado.")
+
+    nuevo_id = _generar_id(autores, "id_autor")
+    autor = {
+        "id_autor": str(nuevo_id),
+        "nombre_autor": nombre_autor.strip(),
+        "email": email.strip().lower(),
+        "password_hash": str(password_hash or "").strip(),
+    }
+    autores.append(autor)
+    gestor_datos.guardar_datos(autores_filepath, autores)
+    return autor
 def leer_todos_los_autores(autores_filepath: str) -> \
         (List)[Dict[str, Any]]:
-    pass
+    """Obtiene la lista completa de autores.
+
+        Args:
+            autores_filepath: Ruta al CSV de autores.
+
+        Returns:
+            List[Dict[str, Any]]: Lista de autores.
+        """
+    return gestor_datos.cargar_datos(autores_filepath)
 def buscar_autor_por_id(autores_filepath: str, id_autor: str | int) \
         -> Optional[Dict[str, Any]]:
-    pass
+    """Busca un autor por su ID.
+
+       Args:
+           autores_filepath: Ruta al CSV de autores.
+           id_autor: ID del autor.
+
+       Returns:
+           Optional[Dict[str, Any]]: Autor encontrado o None.
+       """
+    autores = gestor_datos.cargar_datos(autores_filepath)
+    id_str = str(id_autor)
+    for a in autores:
+        if a.get("id_autor") == id_str:
+            return a
+    return None
 def buscar_autor_por_email(autores_filepath: str, email: str) \
         -> Optional[Dict[str, Any]]:
-    pass
+    """Busca un autor por email (insensible a mayúsculas).
+
+       Args:
+           autores_filepath: Ruta al CSV de autores.
+           email: Correo a buscar.
+
+       Returns:
+           Optional[Dict[str, Any]]: Autor encontrado o None.
+
+       Raises:
+           ValidacionError: Si el email no es válido.
+       """
+    _validar_email(email)
+    autores = gestor_datos.cargar_datos(autores_filepath)
+    email_l = email.strip().lower()
+    for a in autores:
+        if a.get("email", "").strip().lower() == email_l:
+            return a
+    return None
 def actualizar_autor(
     autores_filepath: str,
     id_autor: str | int,
     datos_nuevos: Dict[str, Any],
 ) -> Dict[str, Any]:
-    pass
+    """Actualiza campos de un autor.
+
+       Reglas:
+       - Si se cambia el email, validar formato y unicidad.
+       - Convierte todos los valores a str para consistencia.
+
+       Args:
+           autores_filepath: Ruta al CSV de autores.
+           id_autor: ID del autor a actualizar.
+           datos_nuevos: Campos a modificar (nombre_autor, email, password_hash).
+
+       Returns:
+           Dict[str, Any]: Autor actualizado.
+
+       Raises:
+           AutorNoEncontrado: Si el autor no existe.
+           EmailDuplicado: Si el nuevo email ya está en uso.
+           ValidacionError: Si algún campo es inválido.
+       """
+    autores = gestor_datos.cargar_datos(autores_filepath)
+    id_str = str(id_autor)
+
+    idx = -1
+    for i, a in enumerate(autores):
+        if a.get("id_autor") == id_str:
+            idx = i
+            break
+    if idx == -1:
+        raise AutorNoEncontrado(f"No existe autor con id_autor='{id_str}'.")
+
+    autor = dict(autores[idx])  # copia
+
+    if "nombre_autor" in datos_nuevos:
+        if not _es_str_no_vacio(datos_nuevos["nombre_autor"]):
+            raise ValidacionError("El nombre del autor no puede estar vacío.")
+        autor["nombre_autor"] = str(datos_nuevos["nombre_autor"]).strip()
+
+    if "email" in datos_nuevos:
+        nuevo_email = str(datos_nuevos["email"]).strip().lower()
+        _validar_email(nuevo_email)
+        # verificar unicidad
+        for a in autores:
+            if (a.get("id_autor") != id_str and a.get("email", "").strip().lower()
+                    == nuevo_email):
+                raise EmailDuplicado(f"El email '{nuevo_email}"
+                                     f"' ya está en uso por otro autor.")
+        autor["email"] = nuevo_email
+
+    if "password_hash" in datos_nuevos:
+        autor["password_hash"] = str(datos_nuevos["password_hash"] or "").strip()
+
+    autores[idx] = autor
+    gestor_datos.guardar_datos(autores_filepath, autores)
+    return autor
+
 def eliminar_autor(autores_filepath: str, id_autor: str | int) -> bool:
     pass
 def crear_post(
