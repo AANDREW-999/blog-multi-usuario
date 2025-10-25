@@ -16,15 +16,84 @@ AccesoNoAutorizado = ErrorDeDominio
 
 _EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
 def _ahora_str() -> str:
-    pass
+    """Obtiene la fecha y hora actual formateada.
+
+    Returns:
+        str: Marca de tiempo en formato 'YYYY-MM-DD HH:MM:SS'.
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 def _es_str_no_vacio(valor: Any) -> bool:
-    pass
+    """Indica si el valor es una cadena no vacía tras strip().
+
+    Args:
+        valor: Valor a evaluar.
+
+    Returns:
+        bool: True si es str y no está vacío; False en caso contrario.
+    """
+    return isinstance(valor, str) and valor.strip() != ""
+
 def _validar_email(email: str) -> None:
-    pass
+    """Valida el formato del email.
+
+       Args:
+           email: Correo a validar.
+
+       Raises:
+           ValidacionError: Si el email está vacío o no cumple el formato.
+       """
+    if not _es_str_no_vacio(email) or not _EMAIL_RE.match(email):
+        raise ValidacionError("El email no tiene un formato válido.")
 def _normalizar_tags(tags: Sequence[str]) -> List[str]:
-    pass
+    """Normaliza y deduplica tags preservando el orden.
+
+       Convierte a minúsculas, aplica strip() y elimina duplicados.
+
+       Args:
+           tags: Secuencia de cadenas (tags).
+
+       Returns:
+           List[str]: Lista de tags normalizados sin duplicados.
+
+       Raises:
+           ValidacionError: Si algún elemento no es cadena.
+       """
+    vistos = set()
+    normalizados: List[str] = []
+    for t in tags:
+        if not isinstance(t, str):
+            raise ValidacionError("Todos los tags deben ser cadenas de texto.")
+        tt = t.strip().lower()
+        if tt and tt not in vistos:
+            vistos.add(tt)
+            normalizados.append(tt)
+    return normalizados
+
 def _parsear_tags(tags: Any) -> List[str]:
-    pass
+    """Convierte la entrada de tags a una lista normalizada.
+
+        Admite lista/tupla de strings o una cadena separada por comas.
+
+        Args:
+            tags: Lista/tupla de strings, cadena separada por comas o None.
+
+        Returns:
+            List[str]: Lista de tags normalizados.
+
+        Raises:
+            ValidacionError: Si el formato no es soportado.
+        """
+    if tags is None:
+        return []
+    if isinstance(tags, (list, tuple)):
+        return _normalizar_tags(list(tags))
+    if isinstance(tags, str):
+        separados = [p.strip() for p in tags.split(",")]
+        return _normalizar_tags(separados)
+    raise ValidacionError("Formato de 'tags' no soportado. Use lista o cadena separada "
+                          "por comas.")
+
 def _generar_id(items: List[Dict[str, Any]], clave_id: str) -> int:
     pass
 def _generar_id_comentario(post: Dict[str, Any]) -> int:
@@ -109,4 +178,32 @@ def actualizar_comentario_de_post(
     id_autor_en_sesion: Optional[str | int] = None,
 ) -> Dict[str, Any]:
     pass
-
+__all__ = [
+    # Excepciones
+    "ErrorDeDominio",
+    "ValidacionError",
+    "EmailDuplicado",
+    "AutorNoEncontrado",
+    "PostNoEncontrado",
+    "AccesoNoAutorizado",
+    # Autores
+    "crear_autor",
+    "leer_todos_los_autores",
+    "buscar_autor_por_id",
+    "buscar_autor_por_email",
+    "actualizar_autor",
+    "eliminar_autor",
+    # Posts
+    "crear_post",
+    "leer_todos_los_posts",
+    "listar_posts_por_autor",
+    "buscar_posts_por_tag",
+    "buscar_post_por_id",
+    "actualizar_post",
+    "eliminar_post",
+    # Comentarios
+    "agregar_comentario_a_post",
+    "listar_comentarios_de_post",
+    "eliminar_comentario_de_post",
+    "actualizar_comentario_de_post",
+]
