@@ -281,7 +281,23 @@ def actualizar_autor(
     return autor
 
 def eliminar_autor(autores_filepath: str, id_autor: str | int) -> bool:
-    pass
+    """Elimina un autor por su ID.
+
+       Args:
+           autores_filepath: Ruta al CSV de autores.
+           id_autor: ID del autor a eliminar.
+
+       Returns:
+           bool: True si se eliminó; False si no existía.
+       """
+    autores = gestor_datos.cargar_datos(autores_filepath)
+    id_str = str(id_autor)
+    original = len(autores)
+    autores = [a for a in autores if a.get("id_autor") != id_str]
+    if len(autores) < original:
+        gestor_datos.guardar_datos(autores_filepath, autores)
+        return True
+    return False
 def crear_post(
         posts_filepath: str,
         id_autor_en_sesion: str | int,
