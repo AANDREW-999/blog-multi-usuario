@@ -368,21 +368,56 @@ def actualizar_post(
     id_autor_en_sesion: str | int,
     datos_nuevos: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """Obtiene un post por su ID.
+    """Actualiza un post (solo su dueño).
 
-        Args:
-            posts_filepath: Ruta al JSON de publicaciones.
-            id_post: ID del post.
+       Campos permitidos: 'titulo', 'contenido', 'tags'.
 
-        Returns:
-            Optional[Dict[str, Any]]: Post encontrado o None.
-        """
+       Args:
+           posts_filepath: Ruta al JSON de publicaciones.
+           id_post: ID del post a actualizar.
+           id_autor_en_sesion: ID del autor autenticado.
+           datos_nuevos: Campos a modificar.
+
+       Returns:
+           Dict[str, Any]: Post actualizado.
+
+       Raises:
+           PostNoEncontrado: Si el post no existe.
+           AccesoNoAutorizado: Si el post no pertenece al autor.
+           ValidacionError: Si algún campo es inválido.
+       """
     posts = gestor_datos.cargar_datos(posts_filepath)
-    id_str = str(id_post)
-    for p in posts:
-        if p.get("id_post") == id_str:
-            return p
-    return None
+    id_post_str = str(id_post)
+    id_autor_sesion_str = str(id_autor_en_sesion)
+
+    idx = -1
+    for i, p in enumerate(posts):
+        if p.get("id_post") == id_post_str:
+            idx = i
+            break
+    if idx == -1:
+        raise PostNoEncontrado(f"No existe post con id_post='{id_post_str}'.")
+
+    post = dict(posts[idx])  # copia
+    if post.get("id_autor") != id_autor_sesion_str:
+        raise AccesoNoAutorizado("No puedes modificar publicaciones de otros autores.")
+
+    if "titulo" in datos_nuevos:
+        if not _es_str_no_vacio(datos_nuevos["titulo"]):
+            raise ValidacionError("El título no puede estar vacío.")
+        post["titulo"] = str(datos_nuevos["titulo"]).strip()
+
+    if "contenido" in datos_nuevos:
+        if not _es_str_no_vacio(datos_nuevos["contenido"]):
+            raise ValidacionError("El contenido no puede estar vacío.")
+        post["contenido"] = str(datos_nuevos["contenido"]).strip()
+
+    if "tags" in datos_nuevos:
+        post["tags"] = _parsear_tags(datos_nuevos["tags"])
+
+    posts[idx] = post
+    gestor_datos.guardar_datos(posts_filepath, posts)
+    return post
 
 def eliminar_post(
     posts_filepath: str,
