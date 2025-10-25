@@ -306,24 +306,84 @@ def crear_post(
         tags: Any,
         **opciones,
 ) -> Dict[str, Any]:
-    pass
+    funcion
+    de
+    eliminar
+    autor
+
 def leer_todos_los_posts(posts_filepath: str) -> List[Dict[str, Any]]:
-    pass
+    """Obtiene la lista completa de publicaciones.
+
+       Args:
+           posts_filepath: Ruta al JSON de publicaciones.
+
+       Returns:
+           List[Dict[str, Any]]: Lista de posts.
+       """
+    return gestor_datos.cargar_datos(posts_filepath)
+
+
 def listar_posts_por_autor(posts_filepath: str, id_autor: str | int) \
         -> List[Dict[str, Any]]:
-    pass
+    """Lista todas las publicaciones de un autor específico.
+
+    Args:
+        posts_filepath: Ruta al JSON de publicaciones.
+        id_autor: ID del autor.
+
+    Returns:
+        List[Dict[str, Any]]: Publicaciones del autor.
+    """
+    id_str = str(id_autor)
+    posts = gestor_datos.cargar_datos(posts_filepath)
+    return [p for p in posts if p.get("id_autor") == id_str]
+
 def buscar_posts_por_tag(posts_filepath: str, tag: str) -> List[Dict[str, Any]]:
-    pass
+    """Busca publicaciones que contengan el tag indicado.
+
+       La comparación es insensible a mayúsculas/minúsculas.
+
+       Args:
+           posts_filepath: Ruta al JSON de publicaciones.
+           tag: Tag a buscar.
+
+       Returns:
+           List[Dict[str, Any]]: Publicaciones que contienen el tag.
+
+       Raises:
+           ValidacionError: Si el tag está vacío.
+       """
+    if not _es_str_no_vacio(tag):
+        raise ValidacionError("El tag de búsqueda no puede estar vacío.")
+    t = tag.strip().lower()
+    posts = gestor_datos.cargar_datos(posts_filepath)
+    return [p for p in posts if t in [tt.lower() for tt in (p.get("tags") or [])]]
+
 def buscar_post_por_id(posts_filepath: str, id_post: str | int) \
         -> Optional[Dict[str, Any]]:
-    pass
+
 def actualizar_post(
     posts_filepath: str,
     id_post: str | int,
     id_autor_en_sesion: str | int,
     datos_nuevos: Dict[str, Any],
 ) -> Dict[str, Any]:
-    pass
+    """Obtiene un post por su ID.
+
+        Args:
+            posts_filepath: Ruta al JSON de publicaciones.
+            id_post: ID del post.
+
+        Returns:
+            Optional[Dict[str, Any]]: Post encontrado o None.
+        """
+    posts = gestor_datos.cargar_datos(posts_filepath)
+    id_str = str(id_post)
+    for p in posts:
+        if p.get("id_post") == id_str:
+            return p
+    return None
+
 def eliminar_post(
     posts_filepath: str,
     id_post: str | int,
