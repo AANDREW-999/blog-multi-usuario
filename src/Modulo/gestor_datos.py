@@ -52,3 +52,53 @@ def _asegurar_directorio(filepath: str) -> None:
     if directorio and not os.path.exists(directorio):
         os.makedirs(directorio, exist_ok=True)
 
+def _campos_csv_para(filepath: str) -> List[str]:
+    """
+    Devuelve los nombres de las columnas que tendrá el archivo CSV
+    Determina los campos que se usarán en el CSV.
+
+    En este proyecto solo manejamos 'autores.csv'.
+
+    Args:
+        filepath: Ruta del archivo CSV.
+
+    Returns:
+        List[str]: Lista de nombres de columnas.
+    """
+    nombre = os.path.basename(filepath).lower()
+    if nombre.endswith("autores.csv"):
+        return CAMPOS_AUTORES
+    # Fallback genérico: si no es autores.csv, intentamos no fallar.
+    return CAMPOS_AUTORES
+
+
+def _escritura_atomica(path_destino: str, contenido: str, modo_binario: bool = False) \
+        -> None:
+    """ Escribe un archivo de forma segura.
+    Primero crea un archivo temporal y luego lo reemplaza por el final.
+    Así evitamos errores si algo falla durante la escritura
+
+    Crea un archivo temporal en el mismo directorio, escribe y reemplaza.
+
+    Args:
+        path_destino: Ruta del archivo destino.
+        contenido: Contenido a escribir.
+        modo_binario: Indica si se escribe en binario.
+
+    Returns:
+        None
+    """
+    _asegurar_directorio(path_destino)
+    directorio = os.path.dirname(os.path.abspath(path_destino)) or "."
+    suffix = ".tmpjson" if _es_json(path_destino) else ".tmpcsv"
+    mode = "wb" if modo_binario else "w"
+    encoding = None if modo_binario else "utf-8"
+
+    with tempfile.NamedTemporaryFile(mode=mode, delete=False, dir=directorio,
+                                     suffix=suffix, encoding=encoding) as tmp:
+        tmp.write(contenido)
+        tmp_path = tmp.name
+
+    os.replace(tmp_path, path_destino)
+
+
