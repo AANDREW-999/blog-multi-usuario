@@ -664,23 +664,24 @@ def onboarding_inicio() -> bool:
         bool: True si se completó el inicio (login/registro) o ya había sesión;
               False si el usuario decide salir.
     """
-    while not Sesion.activa():
-        menu = Table.grid(expand=True)
-        menu.add_column(ratio=1, justify="center")
-        menu.add_row(Text("Bienvenido", style="bold bright_cyan"))
-        opciones = Table.grid(padding=(0, 2))
-        opciones.add_column(justify="right", style="bold yellow")
-        opciones.add_column(justify="left")
-        opciones.add_row("1", "Iniciar sesión")
-        opciones.add_row("2", "Registrarse")
-        opciones.add_row("0", "Salir")
-        panel = Panel(
-            opciones,
-            title="[bold cyan]Inicio[/bold cyan]",
-            border_style="bright_cyan",
-        )
-        console.print(panel)
+    # Menú de bienvenida con diseño más colorido y opciones 1/2/0
+    menu = Table.grid(expand=True)
+    menu.add_column(ratio=1, justify="center")
+    menu.add_row(Text("Bienvenido", style="bold bright_cyan"))
+    opciones = Table.grid(padding=(0, 2))
+    opciones.add_column(justify="right", style="bold yellow")
+    opciones.add_column(justify="left")
+    opciones.add_row("1", "Iniciar sesión")
+    opciones.add_row("2", "Registrarse")
+    opciones.add_row("0", "Salir")
+    panel = Panel(
+        opciones,
+        title="[bold cyan]Inicio[/bold cyan]",
+        border_style="bright_cyan",
+    )
+    console.print(panel)
 
+    while not Sesion.activa():
         opcion = Prompt.ask(
             "[magenta]Opción[/magenta]",
             choices=["1", "2", "0"],
@@ -698,7 +699,6 @@ def onboarding_inicio() -> bool:
         elif opcion == "0":
             return False
     return True
-
 
 
 def registrar_ui() -> bool:
@@ -852,7 +852,7 @@ def actualizar_autor_ui() -> None:
             border_style="bright_blue",
         )
     )
-
+    # NUEVO: solo el autor en sesión puede editar su propio perfil
     if not Sesion.activa():
         _avisar_requiere_sesion()
 
@@ -1074,7 +1074,7 @@ def iniciar_sesion_ui() -> bool:  # noqa: PLR0911, PLR0915
                         "Inicio cancelado.[/yellow]"
                     )
 
-
+                    # Evitar un return adicional; delegar al manejador general
                     raise Cancelado()
 
             # Validar contraseña persistida
@@ -1127,7 +1127,7 @@ def iniciar_sesion_ui() -> bool:  # noqa: PLR0911, PLR0915
         return False
 
 
-
+# --- Menús: Publicaciones ---
 def menu_publicaciones() -> None:
     """
     Menú de publicaciones: crear, listar por autor, buscar por tag, editar y
