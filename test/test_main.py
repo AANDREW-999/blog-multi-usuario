@@ -406,6 +406,7 @@ def test_ensure_sistema_y_bienvenida_crea_y_idempotente(
     assert isinstance(p1, dict)
     assert main_mod.BIENVENIDA_TAG in (p1.get("tags") or [])
 
+
     p2 = main_mod.ensure_sistema_y_bienvenida()
     assert p1.get("id_post") == p2.get("id_post")
 
