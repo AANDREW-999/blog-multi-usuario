@@ -718,9 +718,9 @@ def registrar_ui() -> bool:
     try:
         nombre = pedir_obligatorio("Nombre del autor")
         email = pedir_obligatorio("Email", to_lower=True)
-        # Crear autor sin contraseña persistida inicialmente
+
         autor = modelo.crear_autor(AUTORES_CSV, nombre, email)
-        # Solicitar y configurar contraseña antes de iniciar sesión
+
         while True:
             try:
                 pwd = pedir_password_nuevo()
@@ -731,7 +731,7 @@ def registrar_ui() -> bool:
                     {"password_hash": pwd_hash},
                 )
                 mostrar_ok("Contraseña configurada.")
-                # reflejar en memoria del flujo actual
+
                 autor["password_hash"] = pwd_hash
                 break
             except modelo.ValidacionError as e:
@@ -1737,10 +1737,9 @@ def eliminar_comentario_ui() -> None:  # noqa: PLR0912
         mostrar_error(str(e))
 
 
-# --- Menú y UIs: Comentarios ---
 def agregar_comentario_ui() -> None:
     """
-    Agrega un comentario a un post, mostrando el detalle antes de confirmar.
+    Agrega un comentario a un post, mostrando primero todos los posts disponibles.
 
     Returns:
         None
@@ -1755,9 +1754,28 @@ def agregar_comentario_ui() -> None:
             border_style="bright_magenta",
         )
     )
+
+    # NUEVO: Mostrar primero todos los posts disponibles
+    posts = _cargar_todos_los_posts()
+    if not posts:
+        console.print("[yellow]No hay publicaciones disponibles para comentar.[/yellow]")
+        return
+
+    # Mostrar tabla con todos los posts
+    console.print(tabla_posts(posts, mostrar_autor=True))
+    console.print()
+
+    # Crear conjunto de IDs válidos para validación
+    ids_validos = {p["id_post"] for p in posts}
+
     id_post = Prompt.ask("[magenta]ID del post a comentar[/magenta]").strip()
     if id_post == "0":
         console.print("[yellow]Operación cancelada.[/yellow]")
+        return
+
+    # Validar que el ID existe
+    if id_post not in ids_validos:
+        mostrar_error("El ID indicado no existe en la lista de publicaciones.")
         return
 
     post = modelo.buscar_post_por_id(POSTS_JSON, id_post)
@@ -1765,10 +1783,17 @@ def agregar_comentario_ui() -> None:
         mostrar_error("No existe un post con ese ID.")
         return
 
-    # Mostrar primero la vista detalle del post a comentar
+    # Mostrar la vista detalle del post a comentar
+    console.print()
     render_post_twitter(post)
     console.print()
-    contenido = pedir_obligatorio("Contenido del comentario")
+
+    try:
+        contenido = pedir_obligatorio("Contenido del comentario")
+    except Cancelado:
+        console.print("[yellow]Operación cancelada.[/yellow]")
+        return
+
     if not Confirm.ask("[magenta]¿Publicar este comentario?[/magenta]", default=True):
         console.print("[yellow]Operación cancelada.[/yellow]")
         return
