@@ -156,7 +156,6 @@ def test_guardar_y_cargar_json(tmp_path: Path) -> None:
     salida = gd.cargar_datos(str(ruta))
     assert salida == entrada
 
-
 def test_guardar_y_cargar_en_formato_no_soportado_no_falla(tmp_path: Path) -> None:
     """Extensiones no soportadas no lanzan excepción
 
