@@ -38,6 +38,7 @@ def _load_model_module() -> Any:
     spec = importlib.util.spec_from_file_location(
         "blog_multi_usuario_under_test",
         str(module_path),
+
     )
     assert spec and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
