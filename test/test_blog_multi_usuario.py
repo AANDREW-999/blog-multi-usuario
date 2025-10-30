@@ -27,7 +27,6 @@ if str(MODULE_DIR) not in sys.path:
 
 from src.Modulo import gestor_datos  # noqa: E402
 
-
 def _load_model_module() -> Any:
     """
     Carga dinámicamente src/Modulo/blog_multi_usuario.py y devuelve el módulo.
