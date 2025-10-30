@@ -151,6 +151,7 @@ def test_guardar_y_cargar_json(tmp_path: Path) -> None:
         {"id_post": 1, "titulo": "Hola"},
         {"id_post": 2, "titulo": "Mundo"},
     ]
+
     gd.guardar_datos(str(ruta), entrada)
     salida = gd.cargar_datos(str(ruta))
     assert salida == entrada
