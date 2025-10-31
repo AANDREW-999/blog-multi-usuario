@@ -1,4 +1,4 @@
-# -- coding: utf-8 --
+
 """
 Módulo de Persistencia de Datos.
 archivo que se encarga de guardar y leer datos
