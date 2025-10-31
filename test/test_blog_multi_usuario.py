@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Pruebas unitarias para src/Modulo/blog_multi_usuario.py.
 
@@ -20,12 +20,12 @@ from typing import Any
 
 import pytest
 
-# Asegurar que los módulos del proyecto (en src/Modulo) sean importables
+
 MODULE_DIR = Path(__file__).resolve().parents[1] / "src" / "Modulo"
 if str(MODULE_DIR) not in sys.path:
     sys.path.insert(0, str(MODULE_DIR))
 
-from src.Modulo import gestor_datos  # noqa: E402
+from src.Modulo import gestor_datos
 
 def _load_model_module() -> Any:
     """
@@ -62,27 +62,24 @@ def modelo(tmp_path: Path) -> Any:
     gestor_datos.inicializar_archivo(autores_csv)
     gestor_datos.inicializar_archivo(posts_json)
 
-    # Exponer rutas en el módulo (para comodidad en tests)
-    m._AUTORES = autores_csv  # type: ignore[attr-defined]
-    m._POSTS = posts_json  # type: ignore[attr-defined]
+
+    m._AUTORES = autores_csv
+    m._POSTS = posts_json
 
     return m
 
 
-# -------------------
-# Autores (CSV)
-# -------------------
 
 def test_crear_autor_y_buscar_por_email_y_id(modelo: Any) -> None:
     """
     Crear autor debe persistir y permitir buscar por email (case-insensitive) e ID.
     """
-    a1 = modelo.crear_autor(modelo._AUTORES, "Alice", "alice@example.com")  # type: ignore[attr-defined]
+    a1 = modelo.crear_autor(modelo._AUTORES, "Alice", "alice@example.com")
     assert a1["id_autor"].isdigit()
     assert a1["nombre_autor"] == "Alice"
     assert a1["email"] == "alice@example.com"
 
-    # Buscar por email (insensible a mayúsculas)
+    # Buscar por email
     a1b = modelo.buscar_autor_por_email(  # type: ignore[attr-defined]
         modelo._AUTORES,
         "ALICE@EXAMPLE.COM",
@@ -109,7 +106,7 @@ def test_actualizar_autor_nombre_y_email_y_unicidad(modelo: Any) -> None:
     a1 = modelo.crear_autor(modelo._AUTORES, "Alice", "alice@example.com")  # type: ignore[attr-defined]
     modelo.crear_autor(modelo._AUTORES, "Bob", "bob@example.com")  # type: ignore[attr-defined]
 
-    # No puede cambiar a un email ya en uso
+
     with pytest.raises(modelo.EmailDuplicado):
         modelo.actualizar_autor(  # type: ignore[attr-defined]
             modelo._AUTORES,
@@ -117,7 +114,7 @@ def test_actualizar_autor_nombre_y_email_y_unicidad(modelo: Any) -> None:
             {"email": "bob@example.com"},
         )
 
-    # Nombre no puede ser vacío
+
     with pytest.raises(modelo.ValidacionError):
         modelo.actualizar_autor(  # type: ignore[attr-defined]
             modelo._AUTORES,
@@ -125,7 +122,7 @@ def test_actualizar_autor_nombre_y_email_y_unicidad(modelo: Any) -> None:
             {"nombre_autor": "  "},
         )
 
-    # Cambio válido de nombre y email
+
     act = modelo.actualizar_autor(
         modelo._AUTORES,  # type: ignore[attr-defined]
         a1["id_autor"],
@@ -134,7 +131,7 @@ def test_actualizar_autor_nombre_y_email_y_unicidad(modelo: Any) -> None:
     assert act["nombre_autor"] == "Alicia"
     assert act["email"] == "alicia@ex.com"
 
-    # Autor inexistente
+
     with pytest.raises(modelo.AutorNoEncontrado):
         modelo.actualizar_autor(  # type: ignore[attr-defined]
             modelo._AUTORES,
@@ -155,16 +152,14 @@ def test_eliminar_autor(modelo: Any) -> None:
     assert ok_segundo is False
 
 
-# -------------------
-# Posts (JSON)
-# -------------------
+
 
 def test_crear_post_validaciones_y_tags(modelo: Any) -> None:
     """
     crear_post debe validar título y contenido, y normalizar tags.
     """
     autor = modelo.crear_autor(modelo._AUTORES, "Alice", "alice@example.com")  # type: ignore[attr-defined]
-    # Tags desde string con duplicados y espacios
+
     post = modelo.crear_post(
         modelo._POSTS,  # type: ignore[attr-defined]
         autor["id_autor"],
@@ -176,17 +171,17 @@ def test_crear_post_validaciones_y_tags(modelo: Any) -> None:
     assert post["id_post"].isdigit()
     assert post["tags"] == ["python", "desarrollo"]
 
-    # Tags con formato inválido (no lista ni string)
+
     with pytest.raises(modelo.ValidacionError):
         modelo.crear_post(modelo._POSTS, autor["id_autor"], "T", "C", 123)  # type: ignore[arg-type, attr-defined]
 
-    # Título/Contenido requeridos
+
     with pytest.raises(modelo.ValidacionError):
         modelo.crear_post(modelo._POSTS, autor["id_autor"], "  ", "C", [])  # type: ignore[attr-defined]
     with pytest.raises(modelo.ValidacionError):
         modelo.crear_post(modelo._POSTS, autor["id_autor"], "T", " ", [])  # type: ignore[attr-defined]
 
-    # Validación de autor inexistente
+
     with pytest.raises(modelo.AutorNoEncontrado):
         modelo.crear_post(
             modelo._POSTS,  # type: ignore[attr-defined]
@@ -242,14 +237,14 @@ def test_listar_y_buscar_posts(modelo: Any) -> None:
     ESPERADOS_A1 = 2
     assert len(posts_a1) == ESPERADOS_A1
 
-    # Búsqueda por tag insensible a mayúsculas
+
     encontrados = modelo.buscar_posts_por_tag(  # type: ignore[attr-defined]
         modelo._POSTS,
         "PYTHON",
     )
     assert {p["titulo"] for p in encontrados} == {"P1", "P3"}
 
-    # Tag vacío no permitido
+
     with pytest.raises(modelo.ValidacionError):
         modelo.buscar_posts_por_tag(modelo._POSTS, "  ")  # type: ignore[attr-defined]
 
@@ -263,7 +258,6 @@ def test_actualizar_post_autorizacion_y_validacion(modelo: Any) -> None:
 
     p = modelo.crear_post(modelo._POSTS, a1["id_autor"], "T1", "C1", ["x"])  # type: ignore[attr-defined]
 
-    # No dueño
     with pytest.raises(modelo.AccesoNoAutorizado):
         modelo.actualizar_post(  # type: ignore[attr-defined]
             modelo._POSTS,
@@ -272,7 +266,6 @@ def test_actualizar_post_autorizacion_y_validacion(modelo: Any) -> None:
             {"titulo": "Otro"},
         )
 
-    # Post inexistente
     with pytest.raises(modelo.PostNoEncontrado):
         modelo.actualizar_post(  # type: ignore[attr-defined]
             modelo._POSTS,
@@ -281,7 +274,7 @@ def test_actualizar_post_autorizacion_y_validacion(modelo: Any) -> None:
             {"titulo": "X"},
         )
 
-    # Título/Contenido no pueden ser vacíos
+
     with pytest.raises(modelo.ValidacionError):
         modelo.actualizar_post(  # type: ignore[attr-defined]
             modelo._POSTS,
@@ -297,7 +290,7 @@ def test_actualizar_post_autorizacion_y_validacion(modelo: Any) -> None:
             {"contenido": ""},
         )
 
-    # Actualización válida (incluye tags como string)
+
     act = modelo.actualizar_post(
         modelo._POSTS,  # type: ignore[attr-defined]
         p["id_post"],
@@ -324,14 +317,10 @@ def test_eliminar_post_autorizacion(modelo: Any) -> None:
     ok = modelo.eliminar_post(modelo._POSTS, p["id_post"], a1["id_autor"])  # type: ignore[attr-defined]
     assert ok is True
 
-    # Ya fue eliminado
+
     ok2 = modelo.eliminar_post(modelo._POSTS, p["id_post"], a1["id_autor"])  # type: ignore[attr-defined]
     assert ok2 is False
 
-
-# -------------------
-# Comentarios
-# -------------------
 
 def test_agregar_listar_y_eliminar_comentario_con_autorizacion(modelo: Any) -> None:
     """
@@ -362,7 +351,7 @@ def test_agregar_listar_y_eliminar_comentario_con_autorizacion(modelo: Any) -> N
             id_autor_en_sesion="100",
         )
 
-    # Eliminación autorizada
+
     ok = modelo.eliminar_comentario_de_post(  # type: ignore[attr-defined]
         modelo._POSTS,
         p["id_post"],
@@ -371,15 +360,13 @@ def test_agregar_listar_y_eliminar_comentario_con_autorizacion(modelo: Any) -> N
     )
     assert ok is True
 
-    # Comentario inexistente
+
     ok2 = modelo.eliminar_comentario_de_post(modelo._POSTS, p["id_post"], "999")  # type: ignore[attr-defined]
     assert ok2 is False
 
 
 def test_actualizar_comentario_validaciones_y_autorizacion(modelo: Any) -> None:
-    """
-    Actualizar comentario requiere pertenencia (si hay id_autor) y contenido no vacío.
-    """
+
     a1 = modelo.crear_autor(modelo._AUTORES, "Alice", "alice@example.com")  # type: ignore[attr-defined]
     p = modelo.crear_post(modelo._POSTS, a1["id_autor"], "T1", "C1", [])  # type: ignore[attr-defined]
     c = modelo.agregar_comentario_a_post(
@@ -390,7 +377,7 @@ def test_actualizar_comentario_validaciones_y_autorizacion(modelo: Any) -> None:
         id_autor=a1["id_autor"],
     )
 
-    # Otro autor no puede editar
+
     with pytest.raises(modelo.AccesoNoAutorizado):
         modelo.actualizar_comentario_de_post(  # type: ignore[attr-defined]
             modelo._POSTS,
@@ -400,7 +387,7 @@ def test_actualizar_comentario_validaciones_y_autorizacion(modelo: Any) -> None:
             id_autor_en_sesion="999",
         )
 
-    # Contenido vacío no permitido
+
     with pytest.raises(modelo.ValidacionError):
         modelo.actualizar_comentario_de_post(  # type: ignore[attr-defined]
             modelo._POSTS,
@@ -410,7 +397,7 @@ def test_actualizar_comentario_validaciones_y_autorizacion(modelo: Any) -> None:
             id_autor_en_sesion=a1["id_autor"],
         )
 
-    # Actualización válida
+
     c2 = modelo.actualizar_comentario_de_post(  # type: ignore[attr-defined]
         modelo._POSTS,
         p["id_post"],
