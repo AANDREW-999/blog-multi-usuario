@@ -7,7 +7,9 @@ import csv  # Lectura/escritura de archivos CSV
 import json  # Manejo de estructuras y archivos JSON
 import os  # Orabajar con rutas y carpetas
 import tempfile  # Crear archivos temporales (para guardar datos de forma segura)
-from io import StringIO #StringIO Guardar texto en memoria antes de escribirlo en el disco
+from io import (
+    StringIO,  #StringIO Guardar texto en memoria antes de escribirlo en el disco
+)
 from typing import Any, Dict, List  # Anotaciones de tipos para claridad
 
 # Constantes de cabeceras para CSV de autores

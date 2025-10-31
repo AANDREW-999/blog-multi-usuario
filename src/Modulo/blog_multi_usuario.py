@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional, Sequence  # Tipado para ayudas y c
 
 import gestor_datos  # Persistencia (CSV/JSON) desacoplada del modelo
 
-
 ErrorDeDominio = Exception
 ValidacionError = ErrorDeDominio
 EmailDuplicado = ErrorDeDominio
