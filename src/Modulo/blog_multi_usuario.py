@@ -1,13 +1,10 @@
-"""
-Módulo de Lógica de Negocio (Modelo) — Sistema de Blog Multi-usuario.
-"""
-from __future__ import annotations  # Anotaciones diferidas para tipos
+from __future__ import annotations
 
-import re  # Expresiones regulares para validar emails
-from datetime import datetime  # Fechas y horas para marcas de tiempo
+import re  # validar emails
+from datetime import datetime  # Fechas y horas para marcar de tiempo
 from typing import Any, Dict, List, Optional, Sequence  # Tipado para ayudas y claridad
 
-import gestor_datos  # Persistencia (CSV/JSON) desacoplada del modelo
+import gestor_datos  # trae los archivos planos
 
 
 ErrorDeDominio = Exception
@@ -25,31 +22,32 @@ def _ahora_str() -> str:
     """Obtiene la fecha y hora actual formateada.
 
     Returns:
-        str: Marca de tiempo en formato 'YYYY-MM-DD HH:MM:SS'.
+        str: Marca de tiempo en formato en 'YYYY-MM-DD HH:MM:SS'.
     """
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _es_str_no_vacio(valor: Any) -> bool:
-    """Indica si el valor es una cadena no vacía tras strip().
+    """valida si el str esta vacio.
 
     Args:
         valor: Valor a evaluar.
 
     Returns:
-        bool: True si es str y no está vacío; False en caso contrario.
+        bool: True si es str y no está vacío;
+         o False si tiene str .
     """
     return isinstance(valor, str) and valor.strip() != ""
 
 
 def _validar_email(email: str) -> None:
-    """Valida el formato del email.
+    """Valida el formato de email.
 
     Args:
         email: Correo a validar.
 
     Raises:
-        ValidacionError: Si el email está vacío o no cumple el formato.
+        ValidacionError: Si el email está vacío o no cumple con lo requerido.
     """
     if not _es_str_no_vacio(email) or not _EMAIL_RE.match(email):
         raise ValidacionError("El email no tiene un formato válido.")

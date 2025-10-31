@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Módulo Principal - Interfaz de Usuario (UI) con Rich
 Sistema de Blog Multi-Usuario (consola)
@@ -17,7 +16,7 @@ from __future__ import (
     annotations,  # Permite posponer evaluación de anotaciones de tipos
 )
 
-# NUEVO: hashing de contraseñas (en memoria)
+# hashing para contraseña
 import hashlib  # Hashing (SHA-256) para proteger contraseñas
 import os  # Manejo de rutas y sistema de archivos
 import secrets  # Generación de valores aleatorios seguros (salts)
@@ -26,7 +25,7 @@ from typing import Any, Dict, List, Optional  # Tipos auxiliares para anotar fir
 import blog_multi_usuario as modelo  # Lógica de negocio (modelo del dominio)
 import gestor_datos  # Persistencia (lectura/escritura CSV/JSON)
 
-# --- Rich ---
+# rich
 from rich.console import Console, Group  # Consola y agrupador de componentes Rich
 from rich.markup import escape  # Escapar contenido dinámico en markup
 from rich.panel import Panel  # Paneles con bordes y títulos
@@ -41,7 +40,6 @@ MIN_PASSWORD_LENGTH = 4
 RESUMEN_COMENTARIO_MAX = 80
 
 
-# --- Cancelación de formularios ---
 Cancelado = Exception
 
 
@@ -208,7 +206,7 @@ def pedir_password_nuevo() -> str:
 
 
 # --- Configuración de rutas ---
-# Hacemos la ruta a 'data/' robusta, independiente del cwd
+# Hacemos la ruta a 'data/' robusta
 # (dos niveles arriba de este archivo)
 BASE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..")
@@ -218,7 +216,7 @@ AUTORES_CSV = os.path.join(DIRECTORIO_DATOS, "autores.csv")
 POSTS_JSON = os.path.join(DIRECTORIO_DATOS, "posts.json")
 
 
-# --- Estado de sesión (simulado) ---
+
 class Sesion:
     """
     Gestiona el estado de la sesión del usuario actual.
@@ -470,7 +468,7 @@ def render_post_twitter(post: Dict[str, Any]) -> None:
     fecha = post["fecha_publicacion"]
     tags = ", ".join(post.get("tags") or [])
 
-    # Encabezado estilo Twitter (autor izq., título centrado, fecha derecha)
+    # Encabezado con un estilo parecido a X
     header = Table.grid(expand=True)
     header.add_column(ratio=2)
     header.add_column(ratio=3, justify="center")
@@ -583,7 +581,7 @@ def ver_post_ui() -> None:
     ver_post_con_interacciones(id_post)
 
 
-# --- Bienvenida del sistema ---
+#  Bienvenida al sistema
 SISTEMA_EMAIL = "sistema@blog.local"
 SISTEMA_NOMBRE = "Sistema"
 BIENVENIDA_TAG = "bienvenida"
@@ -655,7 +653,6 @@ def mostrar_post_bienvenida_y_comentar() -> None:
 
 
 
-# --- Onboarding inicial (registro / login) ---
 def onboarding_inicio() -> bool:
     """
     Muestra el onboarding inicial y gestiona login/registro.
@@ -929,7 +926,7 @@ def eliminar_autor_ui() -> None:
 
         return
 
-    # Mostrar datos del autor a eliminar (el propio)
+    # Mostrar datos del autor a eliminar
     autor_actual = modelo.buscar_autor_por_id(AUTORES_CSV, Sesion.id_autor)
     if not autor_actual:
         mostrar_error("No se encontró el autor de la sesión.")
@@ -960,8 +957,6 @@ def eliminar_autor_ui() -> None:
         mostrar_error("No se pudo eliminar la cuenta.")
 
 
-
-# --- Menú: Autores (CRUD) ---
 def menu_autores() -> None:
     """
     Menú CRUD de autores: crear, ver, actualizar y eliminar.
@@ -998,7 +993,6 @@ def menu_autores() -> None:
             return
 
 
-# --- Menú: Sesión (simplificado según estado) ---
 def menu_sesion() -> None:
     """
     Menú de sesión: muestra estado, permite cerrar o iniciar sesión.
@@ -1128,7 +1122,7 @@ def iniciar_sesion_ui() -> bool:  # noqa: PLR0911, PLR0915
         return False
 
 
-# --- Menús: Publicaciones ---
+
 def menu_publicaciones() -> None:
     """
     Menú de publicaciones: crear, listar por autor, buscar por tag, editar y
@@ -1349,10 +1343,10 @@ def _mostrar_tabla_y_detalle_posts(posts: List[Dict[str, Any]]) -> None:
         console.print("[yellow]No tienes publicaciones.[/yellow]")
         return
     console.print(tabla_posts(posts, mostrar_autor=False))
-    console.print()  # separación
+    console.print()
     for p in posts:
         render_post_twitter(p)
-        console.print()  # separación entre posts
+        console.print()
 
 
 def _cargar_todos_los_posts() -> List[Dict[str, Any]]:
@@ -1364,7 +1358,7 @@ def _cargar_todos_los_posts() -> List[Dict[str, Any]]:
     """
     try:
         datos = gestor_datos.cargar_datos(POSTS_JSON) or []
-        # Normalizar estructuras esperadas
+
         for p in datos:
             p.setdefault("comentarios", [])
             p.setdefault("tags", [])
@@ -1388,7 +1382,6 @@ def _recolectar_tags_conteo():
             t_norm = str(t).strip()
             if t_norm:
                 contador[t_norm] = contador.get(t_norm, 0) + 1
-    # Orden: más usados primero, luego alfabético
     return sorted(contador.items(), key=lambda kv: (-kv[1], kv[0].lower()))
 
 
@@ -1816,7 +1809,7 @@ def agregar_comentario_ui() -> None:
         mostrar_error(str(e))
 
 
-def editar_comentario_ui() -> None:  # noqa: PLR0911, PLR0912, PLR0915
+def editar_comentario_ui() -> None:
     """
     Edita un comentario propio, guiando con tabla y detalle y confirmación
     final.
@@ -1847,7 +1840,7 @@ def editar_comentario_ui() -> None:  # noqa: PLR0911, PLR0912, PLR0915
     for c in mis_coms:
         idx.setdefault(c["id_comentario"], []).append(c["id_post"])
 
-    # 2) Pedir ID del comentario (y post si es necesario)
+    # 2) Pedir ID del comentario
     id_com = Prompt.ask("[magenta]ID del comentario a editar[/magenta]").strip()
     if id_com == "0":
         console.print("[yellow]Operación cancelada.[/yellow]")
@@ -1895,7 +1888,7 @@ def editar_comentario_ui() -> None:  # noqa: PLR0911, PLR0912, PLR0915
         return
 
     try:
-        # Se asume que el modelo expone esta operación. Si no existe, mostrar aviso.
+
         if hasattr(modelo, "actualizar_comentario_de_post"):
             modelo.actualizar_comentario_de_post(
                 POSTS_JSON,
@@ -1912,8 +1905,7 @@ def editar_comentario_ui() -> None:  # noqa: PLR0911, PLR0912, PLR0915
             )
             return
 
-        # 4) Mostrar resultado: tabla actualizada +
-        # detalle de los posts donde tengo comentarios
+        # 4) Mostrar resultado: tabla actualizada
         mis_coms = _recolectar_mis_comentarios()
         if mis_coms:
             _mostrar_tabla_y_detalle_mis_comentarios(mis_coms)
@@ -1965,7 +1957,7 @@ def menu_comentarios() -> None:
             return
 
 
-# --- Menú principal ---
+
 def mostrar_menu_principal() -> None:
     """
     Muestra el menú principal y el estado de sesión como subtítulo.
@@ -2012,7 +2004,7 @@ def main() -> None:
         None
     """
     init_archivos()
-    # Asegurar bienvenida del sistema
+
     ensure_sistema_y_bienvenida()
     banner()
     # Salida solicitada: etiqueta y rutas en verde
