@@ -328,7 +328,7 @@ def crear_post(
         tags: Any,
         **opciones,
 ) -> Dict[str, Any]:
-    """Crea una nueva publicación asociada al autor en sesión.
+    """Crea una nueva publicación .
 
     Args:
         posts_filepath: Ruta al JSON de publicaciones.

@@ -1134,13 +1134,12 @@ def menu_publicaciones() -> None:
     while True:
         console.print(
             Panel(
-                "[bold yellow]1[/bold yellow]. Crear post (requiere sesión)\n"
+                "[bold yellow]1[/bold yellow]. Crear post \n"
                 "[bold yellow]2[/bold yellow]. Listar posts de un autor\n"
                 "[bold yellow]3[/bold yellow]. Buscar posts por tag\n"
                 "[bold yellow]4[/bold yellow]. Editar mi post "
                 "(requiere sesión)\n"
-                "[bold yellow]5[/bold yellow]. Eliminar mi post "
-                "(requiere sesión)\n"
+                "[bold yellow]5[/bold yellow]. Eliminar mi post \n"
                 "[bold yellow]6[/bold yellow]. Volver",
                 title="[bold cyan]Publicaciones[/bold cyan]",
                 border_style="bright_blue",
