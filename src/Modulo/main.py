@@ -1750,7 +1750,8 @@ def agregar_comentario_ui() -> None:
     # NUEVO: Mostrar primero todos los posts disponibles
     posts = _cargar_todos_los_posts()
     if not posts:
-        console.print("[yellow]No hay publicaciones disponibles para comentar.[/yellow]")
+        (console.print
+         ("[yellow]No hay publicaciones disponibles para comentar.[/yellow]"))
         return
 
     # Mostrar tabla con todos los posts
@@ -1808,86 +1809,144 @@ def agregar_comentario_ui() -> None:
         mostrar_error(str(e))
 
 
-def editar_comentario_ui() -> None:
+def _crear_indice_comentarios(mis_coms: List[Dict[str, Any]]) -> Dict[str, List[str]]:
     """
-    Edita un comentario propio, guiando con tabla y detalle y confirmación
-    final.
+    Crea un índice de comentarios agrupados por id_comentario.
+
+    Args:
+        mis_coms: Lista de comentarios propios del usuario.
 
     Returns:
-        None
+        Dict[str, List[str]]: Diccionario donde la clave es id_comentario
+                              y el valor es lista de id_post.
     """
-    if not Sesion.activa():
-        mostrar_error("Debe iniciar sesión para editar sus comentarios.")
-        return
-
-    console.print(
-        Panel.fit(
-            "[bold cyan]Editar Comentario[/bold cyan]",
-            border_style="bright_magenta",
-        )
-    )
-
-    # 1) Mostrar primero mis comentarios (tabla + detalle de sus posts)
-    mis_coms = _recolectar_mis_comentarios()
-    if not mis_coms:
-        console.print("[yellow]No has realizado comentarios para editar.[/yellow]")
-        return
-    _mostrar_tabla_y_detalle_mis_comentarios(mis_coms)
-
-    # Índice por id_comentario -> lista de id_post (por si hubiera colisiones)
     idx: Dict[str, List[str]] = {}
     for c in mis_coms:
         idx.setdefault(c["id_comentario"], []).append(c["id_post"])
+    return idx
 
-    # 2) Pedir ID del comentario
+
+def _solicitar_id_comentario(idx: Dict[str, List[str]]) -> Optional[str]:
+    """
+    Solicita al usuario el ID del comentario a editar y lo valida.
+
+    Args:
+        idx: Índice de comentarios disponibles.
+
+    Returns:
+        Optional[str]: ID del comentario o None si se cancela o es inválido.
+    """
     id_com = Prompt.ask("[magenta]ID del comentario a editar[/magenta]").strip()
     if id_com == "0":
         console.print("[yellow]Operación cancelada.[/yellow]")
-        return
+        return None
     if id_com not in idx:
         mostrar_error("El ID de comentario no pertenece a tus comentarios.")
-        return
+        return None
+    return id_com
 
+
+def _determinar_id_post(posts_posibles: List[str]) -> Optional[str]:
+    """
+    Determina el ID del post que contiene el comentario.
+
+    Si hay múltiples posts posibles, solicita al usuario que especifique.
+
+    Args:
+        posts_posibles: Lista de IDs de posts que contienen el comentario.
+
+    Returns:
+        Optional[str]: ID del post o None si la selección es inválida.
+    """
+    if len(posts_posibles) == 1:
+        return posts_posibles[0]
+
+    id_post = Prompt.ask(
+        "[magenta]ID del post que contiene el comentario[/magenta]"
+    ).strip()
+    if id_post not in posts_posibles:
+        mostrar_error("La combinación de IDs no es válida.")
+        return None
+    return id_post
+
+
+def _buscar_comentario_en_post(
+        post: Dict[str, Any],
+        id_com: str
+) -> Optional[Dict[str, Any]]:
+    """
+    Busca un comentario específico dentro de un post.
+
+    Args:
+        post: Diccionario del post que contiene los comentarios.
+        id_com: ID del comentario a buscar.
+
+    Returns:
+        Optional[Dict[str, Any]]: Comentario encontrado o None.
+    """
+    for c in post.get("comentarios") or []:
+        if (
+                str(c.get("id_comentario")) == id_com
+                and str(c.get("id_autor")) == str(Sesion.id_autor)
+        ):
+            return c
+    return None
+
+
+def _obtener_comentario_a_editar() -> Optional[tuple[str, str, Dict[str, Any]]]:
+    """
+    Guía al usuario para seleccionar un comentario propio a editar.
+
+    Returns:
+        Optional[tuple]: (id_post, id_comentario, comentario_actual)
+        o None si se cancela.
+    """
+    # 1) Mostrar mis comentarios
+    mis_coms = _recolectar_mis_comentarios()
+    if not mis_coms:
+        console.print("[yellow]No has realizado comentarios para editar.[/yellow]")
+        return None
+    _mostrar_tabla_y_detalle_mis_comentarios(mis_coms)
+
+    # 2) Crear índice por id_comentario
+    idx = _crear_indice_comentarios(mis_coms)
+
+    # 3) Pedir ID del comentario
+    id_com = _solicitar_id_comentario(idx)
+    if id_com is None:
+        return None
+
+    # 4) Determinar ID del post
     posts_posibles = idx[id_com]
-    id_post = posts_posibles[0]
-    if len(posts_posibles) > 1:
-        id_post = Prompt.ask(
-            "[magenta]ID del post que contiene el comentario[/magenta]"
-        ).strip()
-        if id_post not in posts_posibles:
-            mostrar_error("La combinación de IDs no es válida.")
-            return
+    id_post = _determinar_id_post(posts_posibles)
+    if id_post is None:
+        return None
 
-    # Obtener el contenido actual para usarlo como default
+    # 5) Obtener el comentario actual
     post = modelo.buscar_post_por_id(POSTS_JSON, id_post)
     if not post:
         mostrar_error("No existe un post con ese ID.")
-        return
-    comentario_actual = None
-    for c in post.get("comentarios") or []:
-        if (
-            str(c.get("id_comentario")) == id_com
-            and str(c.get("id_autor")) == str(Sesion.id_autor)
-        ):
-            comentario_actual = c
-            break
+        return None
+
+    comentario_actual = _buscar_comentario_en_post(post, id_com)
     if not comentario_actual:
         mostrar_error("No se encontró el comentario a editar en ese post.")
-        return
+        return None
 
-    nuevo_contenido = pedir_obligatorio(
-        "Nuevo contenido",
-        default=str(comentario_actual.get("contenido", "")),
-    )
-    if not Confirm.ask(
-        "[magenta]¿Confirmar actualización del comentario?[/magenta]",
-        default=True,
-    ):
-        console.print("[yellow]Operación cancelada.[/yellow]")
-        return
+    return (id_post, id_com, comentario_actual)
 
+
+def _actualizar_y_mostrar_comentario(id_post: str, id_com: str, nuevo_contenido: str)\
+ -> None:
+    """
+    Actualiza un comentario y muestra el resultado.
+
+    Args:
+        id_post: ID del post que contiene el comentario.
+        id_com: ID del comentario a actualizar.
+        nuevo_contenido: Nuevo contenido del comentario.
+    """
     try:
-
         if hasattr(modelo, "actualizar_comentario_de_post"):
             modelo.actualizar_comentario_de_post(
                 POSTS_JSON,
@@ -1904,23 +1963,71 @@ def editar_comentario_ui() -> None:
             )
             return
 
-        # 4) Mostrar resultado: tabla actualizada
+        # Mostrar resultado: tabla actualizada
         mis_coms = _recolectar_mis_comentarios()
         if mis_coms:
             _mostrar_tabla_y_detalle_mis_comentarios(mis_coms)
         else:
             console.print("[yellow]Ya no tienes comentarios propios.[/yellow]")
+
         # También mostrar el post afectado
         post_act = modelo.buscar_post_por_id(POSTS_JSON, id_post)
         if post_act:
             console.print()
             render_post_twitter(post_act)
     except (
-        modelo.PostNoEncontrado,
-        modelo.AccesoNoAutorizado,
-        modelo.ValidacionError,
+            modelo.PostNoEncontrado,
+            modelo.AccesoNoAutorizado,
+            modelo.ValidacionError,
     ) as e:
         mostrar_error(str(e))
+
+
+def editar_comentario_ui() -> None:
+    """
+    Edita un comentario propio, guiando con tabla y detalle y confirmación final.
+
+    Returns:
+        None
+    """
+    if not Sesion.activa():
+        mostrar_error("Debe iniciar sesión para editar sus comentarios.")
+        return
+
+    console.print(
+        Panel.fit(
+            "[bold cyan]Editar Comentario[/bold cyan]",
+            border_style="bright_magenta",
+        )
+    )
+
+    # Obtener el comentario a editar
+    resultado = _obtener_comentario_a_editar()
+    if resultado is None:
+        return
+
+    id_post, id_com, comentario_actual = resultado
+
+    # Solicitar nuevo contenido
+    try:
+        nuevo_contenido = pedir_obligatorio(
+            "Nuevo contenido",
+            default=str(comentario_actual.get("contenido", "")),
+        )
+    except Cancelado:
+        console.print("[yellow]Operación cancelada.[/yellow]")
+        return
+
+    # Confirmar actualización
+    if not Confirm.ask(
+            "[magenta]¿Confirmar actualización del comentario?[/magenta]",
+            default=True,
+    ):
+        console.print("[yellow]Operación cancelada.[/yellow]")
+        return
+
+    # Actualizar y mostrar resultado
+    _actualizar_y_mostrar_comentario(id_post, id_com, nuevo_contenido)
 
 
 def menu_comentarios() -> None:

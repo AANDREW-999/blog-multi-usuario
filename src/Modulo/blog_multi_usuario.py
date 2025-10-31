@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional, Sequence  # Tipado para ayudas y c
 
 import gestor_datos  # trae los archivos planos
 
-
 ErrorDeDominio = Exception
 ValidacionError = ErrorDeDominio
 EmailDuplicado = ErrorDeDominio
