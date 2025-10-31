@@ -1729,7 +1729,7 @@ def eliminar_comentario_ui() -> None:  # noqa: PLR0912
         mostrar_error(str(e))
 
 
-def agregar_comentario_ui() -> None:
+def agregar_comentario_ui() -> None:  # noqa: PLR0911
     """
     Agrega un comentario a un post, mostrando primero todos los posts disponibles.
 
