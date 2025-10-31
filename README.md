@@ -1,3 +1,23 @@
+<!-- Encabezado con badges y estilo centrado -->
+
+<h1 align="center">📝 Sistema de Blog Multi‑usuario — Dependencias: rich · pytest · ruff</h1>
+
+<p align="center">
+  Blog de consola multi‑autor en <b>Python</b> con <b>rich</b>, <b>pytest</b> y <b>ruff</b>. Minimalista, rápido y listo para extender.
+</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/Proyecto-Sistema%20de%20Blog%20Multi--usuario-6A5ACD" alt="Proyecto"/>
+  <br/>
+  <img src="https://img.shields.io/badge/Dependencias-rich%20|%20pytest%20|%20ruff-2E8B57" alt="Dependencias"/>
+  <br/>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white" alt="Python"/></a>
+  <a href="https://docs.astral.sh/uv/"><img src="https://img.shields.io/badge/Entorno-uv-7F52FF" alt="uv"/></a>
+  <a href="https://github.com/Textualize/rich"><img src="https://img.shields.io/badge/rich-CLI%20UI-4E9A06" alt="rich"/></a>
+  <a href="https://docs.pytest.org/"><img src="https://img.shields.io/badge/tests-pytest-0A9EDC" alt="pytest"/></a>
+  <a href="https://docs.astral.sh/ruff/"><img src="https://img.shields.io/badge/lint-ruff-000000" alt="ruff"/></a>
+</p>
+<hr/>
+
 ## 🚀 Ejecución rápida
 - Ejecutar la app:
 ```bash
