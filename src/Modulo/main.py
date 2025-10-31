@@ -654,7 +654,6 @@ def mostrar_post_bienvenida_y_comentar() -> None:
             console.print("[yellow]Inicia sesión para comentar.[/yellow]")
 
 
-
 # --- Onboarding inicial (registro / login) ---
 def onboarding_inicio() -> bool:
     """
@@ -1737,7 +1736,7 @@ def eliminar_comentario_ui() -> None:  # noqa: PLR0912
         mostrar_error(str(e))
 
 
-def agregar_comentario_ui() -> None:
+def agregar_comentario_ui() -> None:  # noqa: PLR0911
     """
     Agrega un comentario a un post, mostrando primero todos los posts disponibles.
 
@@ -1758,7 +1757,8 @@ def agregar_comentario_ui() -> None:
     # NUEVO: Mostrar primero todos los posts disponibles
     posts = _cargar_todos_los_posts()
     if not posts:
-        console.print("[yellow]No hay publicaciones disponibles para comentar.[/yellow]")
+        console.print("[yellow]No hay publicaciones "
+                      "disponibles para comentar.[/yellow]")
         return
 
     # Mostrar tabla con todos los posts
