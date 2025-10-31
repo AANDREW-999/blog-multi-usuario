@@ -11,9 +11,7 @@ from pathlib import Path
 
 import src.Modulo.gestor_datos as gd
 
-# -----------------------------
-# Utilidades internas
-# -----------------------------
+
 
 def test_es_csv_y_es_json() -> None:
     """Reconoce extensiones .csv y .json correctamente."""
@@ -53,9 +51,6 @@ def test_escritura_atomica_reemplaza_contenido(tmp_path: Path) -> None:
     assert json.loads(archivo.read_text(encoding="utf-8")) == [1, 2, 3]
 
 
-# -----------------------------
-# Inicialización
-# -----------------------------
 
 def test_inicializar_archivo_csv_crea_cabecera(tmp_path: Path) -> None:
     """Crea un CSV con las cabeceras de autores si no existe."""
@@ -69,7 +64,7 @@ def test_inicializar_archivo_csv_crea_cabecera(tmp_path: Path) -> None:
         # No hay filas
         assert list(reader) == []
 
-    # Segunda llamada no debe fallar ni reescribir
+
     gd.inicializar_archivo(str(ruta))
     with ruta.open("r", encoding="utf-8") as fh:
         contenido = fh.read()
@@ -84,9 +79,7 @@ def test_inicializar_archivo_json_crea_lista_vacia(tmp_path: Path) -> None:
     assert json.loads(ruta.read_text(encoding="utf-8")) == []
 
 
-# -----------------------------
-# Carga de datos
-# -----------------------------
+
 
 def test_cargar_datos_csv_vacio(tmp_path: Path) -> None:
     """Al cargar CSV recién inicializado, retorna lista vacía."""
@@ -110,9 +103,7 @@ def test_cargar_datos_json_invalido_retorna_lista_vacia(tmp_path: Path) -> None:
     assert datos == []
 
 
-# -----------------------------
-# Guardado de datos
-# -----------------------------
+
 
 def test_guardar_y_cargar_csv_redondea_campos_y_convierte_a_str(tmp_path: Path) -> None:
     """Guarda solo cabeceras esperadas y convierte valores a str.
@@ -120,7 +111,7 @@ def test_guardar_y_cargar_csv_redondea_campos_y_convierte_a_str(tmp_path: Path) 
     También convierte None a cadena vacía en CSV.
     """
     ruta = tmp_path / "autores.csv"
-    # Guardamos con una clave extra que no está en CAMPOS_AUTORES
+
     filas = [
         {
             "id_autor": 1,
@@ -132,7 +123,7 @@ def test_guardar_y_cargar_csv_redondea_campos_y_convierte_a_str(tmp_path: Path) 
     ]
     gd.guardar_datos(str(ruta), filas)
 
-    # Cargar desde CSV debe tener solo las cabeceras conocidas, como str
+
     datos = gd.cargar_datos(str(ruta))
     assert datos == [
         {
@@ -162,7 +153,7 @@ def test_guardar_y_cargar_en_formato_no_soportado_no_falla(tmp_path: Path) -> No
     y retornan lista vacía al cargar.
     """
     ruta = tmp_path / "datos.txt"
-    # Guardar no debe fallar
+
     gd.guardar_datos(str(ruta), [{"a": 1}])
-    # Cargar retorna []
+
     assert gd.cargar_datos(str(ruta)) == []
