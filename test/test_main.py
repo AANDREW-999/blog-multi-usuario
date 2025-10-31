@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Pruebas unitarias para funciones lógicas de src/Modulo/main.py.
 
@@ -21,12 +21,12 @@ from typing import Any, Dict, List
 
 import pytest
 
-# Asegurar que los módulos del proyecto sean importables desde src/Modulo
+
 MODULE_DIR = Path(__file__).resolve().parents[1] / "src" / "Modulo"
 if str(MODULE_DIR) not in sys.path:
     sys.path.insert(0, str(MODULE_DIR))
 
-from src.Modulo import gestor_datos  # noqa: E402  (después de ajustar sys.path)
+from src.Modulo import gestor_datos
 
 
 def _load_main_module() -> Any:
@@ -252,9 +252,7 @@ def test_nombre_autor_con_indice(monkeypatch: pytest.MonkeyPatch) -> None:
     assert mod.nombre_autor("999") == "Autor #999"
 
 
-# -------------------------
-# PRUEBAS ADICIONALES (13)
-# -------------------------
+
 
 def test_tabla_tags_estructura_y_datos(main_mod: Any) -> None:
     posts = _sample_posts_for_tags()
