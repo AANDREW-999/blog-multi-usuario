@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/Dependencias-rich%20|%20pytest%20|%20ruff-2E8B57" alt="Dependencias"/>
   <br/>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white" alt="Python"/></a>
-  <a href="https://docs.astral.sh/uv/"><img src="https://img.shields.io/badge/Entorno-uv-7F52FF" alt="uv"/></a>
+  <a href="htt-ps://docs.astral.sh/uv/"><img src="https://img.shields.io/badge/Entorno-uv-7F52FF" alt="uv"/></a>
   <a href="https://github.com/Textualize/rich"><img src="https://img.shields.io/badge/rich-CLI%20UI-4E9A06" alt="rich"/></a>
   <a href="https://docs.pytest.org/"><img src="https://img.shields.io/badge/tests-pytest-0A9EDC" alt="pytest"/></a>
   <a href="https://docs.astral.sh/ruff/"><img src="https://img.shields.io/badge/lint-ruff-000000" alt="ruff"/></a>
