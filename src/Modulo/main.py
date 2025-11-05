@@ -35,6 +35,30 @@ from rich.text import Text  # Texto con estilos
 
 console = Console()
 
+# === Helpers “glam” con estrellas (no tocar la vista de detalle de post) ===
+STAR_PATTERN = "✦★✶"
+
+def starbar(width: Optional[int] = None, color: str = "magenta") -> str:
+    w = width or console.width
+    line = (STAR_PATTERN * ((w // len(STAR_PATTERN)) + 1))[: max(24, w - 4)]
+    return f"[{color}]{line}[/{color}]"
+
+def glam_title(text: str, color: str = "cyan") -> str:
+    # Reemplaza ✨ (emoji) por estrella no emoji coloreada
+    return (f"[bold {color}][yellow]★[/yellow] {text.upper()} "
+            f"[yellow]★[/yellow][/bold {color}]")
+
+# Paleta y color aleatorio para temas de detalle de post
+COLOR_PALETTE = [
+    "bright_cyan", "bright_green", "bright_magenta", "bright_blue",
+    "bright_white", "cyan", "green", "magenta", "blue", "bright_red"
+]
+
+def rand_color(exclude: Optional[List[str]] = None) -> str:
+    palette = [c for c in COLOR_PALETTE if not exclude or c not in exclude]
+    return secrets.choice(palette) if palette else "white"
+
+
 # --- Constantes (evitar valores mágicos) ---
 MIN_PASSWORD_LENGTH = 4
 RESUMEN_COMENTARIO_MAX = 80
@@ -102,7 +126,7 @@ def mostrar_advertencia(mensaje: str) -> None:
         Panel(
             f"[yellow]{mensaje}[/yellow]",
             border_style="yellow",
-            title="[bold yellow]Aviso[/bold yellow]",
+            title=glam_title("Aviso", "yellow"),
         )
     )
 
@@ -282,15 +306,12 @@ def init_archivos() -> None:
 
 
 def banner() -> None:
-    """
-    Muestra el banner principal de la aplicación.
-
-    Returns:
-        None
-    """
+    # Banner principal súper llamativo con barras de estrellas
     console.print(
         Panel.fit(
-            "[bold cyan]Sistema de Blog Multi-usuario[/bold cyan]",
+            f"{starbar(color='bright_magenta')}\n"
+            f"{glam_title('Sistema de Blog Multi-usuario', 'bright_cyan')}\n"
+            f"{starbar(color='bright_yellow')}",
             border_style="bright_magenta",
         )
     )
@@ -310,7 +331,7 @@ def mostrar_error(mensaje: str) -> None:
         Panel(
             f"[bright_red]{mensaje}[/bright_red]",
             border_style="red",
-            title="[bold red]Error[/bold red]",
+            title=glam_title("Error", "red"),
         )
     )
 
@@ -329,7 +350,7 @@ def mostrar_ok(mensaje: str) -> None:
         Panel(
             f"[bright_green]{mensaje}[/bright_green]",
             border_style="green",
-            title="[bold green]Éxito[/bold green]",
+            title=glam_title("Éxito", "green"),
         )
     )
 
@@ -345,7 +366,7 @@ def _avisar_requiere_sesion() -> None:
         Panel(
             "[yellow]Sin sesión activa: solo puedes visualizar y listar.[/yellow]\n"
             "[white]Para crear, editar o eliminar, inicia sesión o regístrate.[/white]",
-            title="[bold cyan]Acción restringida[/bold cyan]",
+            title=glam_title("Acción restringida", "cyan"),
             border_style="bright_cyan",
         )
     )
@@ -388,17 +409,8 @@ def nombre_autor(id_autor: str) -> str:
 
 
 def tabla_autores(autores: List[Dict[str, Any]]) -> Table:
-    """
-    Construye una tabla Rich con la lista de autores.
-
-    Args:
-        autores: Lista de diccionarios de autores.
-
-    Returns:
-        Table: Tabla formateada para impresión en consola.
-    """
     tabla = Table(
-        title="Autores",
+        title=glam_title("Autores", "bright_cyan"),
         border_style="blue",
         show_header=True,
         header_style="bold magenta",
@@ -415,18 +427,8 @@ def tabla_autores(autores: List[Dict[str, Any]]) -> Table:
 
 
 def tabla_posts(posts: List[Dict[str, Any]], mostrar_autor: bool = True) -> Table:
-    """
-    Construye una tabla Rich con publicaciones.
-
-    Args:
-        posts: Lista de publicaciones.
-        mostrar_autor: Si True, incluye la columna 'Autor'.
-
-    Returns:
-        Table: Tabla formateada con posts.
-    """
     tabla = Table(
-        title="Publicaciones",
+        title=glam_title("Publicaciones", "bright_cyan"),
         border_style="blue",
         show_header=True,
         header_style="bold magenta",
@@ -455,34 +457,35 @@ def tabla_posts(posts: List[Dict[str, Any]], mostrar_autor: bool = True) -> Tabl
 def render_post_twitter(post: Dict[str, Any]) -> None:
     """
     Renderiza un post con formato tipo 'tweet' incluyendo sus comentarios.
-
-    Args:
-        post: Publicación a mostrar.
-
-    Returns:
-        None
+    Ahora usa barras de estrellitas amarillas y un esquema de colores aleatorio
+    en cada apertura.
     """
+    # Tema aleatorio para este render
+    primary = rand_color(exclude=["yellow", "bright_yellow"])
+    secondary = rand_color(exclude=["yellow", "bright_yellow", primary])
+    accent = rand_color(exclude=["yellow", "bright_yellow", primary, secondary])
+
     autor = nombre_autor(post["id_autor"])
     titulo = post["titulo"]
     contenido = post["contenido"]
     fecha = post["fecha_publicacion"]
     tags = ", ".join(post.get("tags") or [])
 
-    # Encabezado con un estilo parecido a X
+    # Encabezado con colores dinámicos
     header = Table.grid(expand=True)
     header.add_column(ratio=2)
     header.add_column(ratio=3, justify="center")
     header.add_column(ratio=2, justify="right")
     header.add_row(
-        Text(f"@{autor}", style="bold cyan"),
-        Text(titulo, style="bold white"),
-        Text(fecha, style="dim"),
+        Text(f"@{autor}", style=f"bold {primary}"),
+        Text(f"★ {titulo} ★", style=f"bold {accent}"),
+        Text(fecha, style=f"dim {secondary}"),
     )
 
-    # Contenido principal
+    # Contenido principal del post
     cuerpo = Panel(
         Text(contenido, style="white"),
-        border_style="cyan",
+        border_style=primary,
         padding=(1, 2),
     )
 
@@ -492,34 +495,32 @@ def render_post_twitter(post: Dict[str, Any]) -> None:
     comentarios = post.get("comentarios") or []
     if comentarios:
         for c in comentarios:
-            cab = Text(
-                f"{c['autor']} · {c['fecha']}",
-                style="magenta",
-            )
+            cab = Text(f"{c['autor']} · {c['fecha']}", style=accent)
             comentarios_tbl.add_row(
                 Panel(
                     Text(c["contenido"]),
                     title=cab,
-                    border_style="magenta",
+                    border_style=accent,
                 )
             )
     else:
-        comentarios_tbl.add_row(
-            Text("Sé el primero en comentar...", style="dim")
-        )
+        comentarios_tbl.add_row(Text("Sé el primero en comentar...", style="dim"))
+
+    # Agrupación con barras de estrellas amarillas arriba y abajo
+    contenido_post = Group(
+        starbar(color="bright_yellow"),
+        header,
+        cuerpo,
+        Panel(comentarios_tbl, title="[yellow]★ Comentarios ★[/yellow]"
+              , border_style=secondary),
+        starbar(color="bright_yellow"),
+    )
 
     post_panel = Panel.fit(
-        Group(
-            header,
-            cuerpo,
-            Panel(
-                comentarios_tbl,
-                title="Comentarios",
-                border_style="blue",
-            ),
-        ),
-        title=Text(f"#{post['id_post']}", style="bold blue"),
-        border_style="blue",
+        contenido_post,
+        title=f"[yellow]★[/yellow] [white]#{post['id_post']}"
+              f"[/white] [yellow]★[/yellow]",
+        border_style=secondary,
         padding=(1, 1),
     )
     console.print(post_panel)
@@ -572,7 +573,7 @@ def ver_post_ui() -> None:
     Returns:
         None
     """
-    console.print(Panel.fit("[bold cyan]Ver Publicación[/bold cyan]"))
+    console.print(Panel.fit(glam_title("Ver Publicación", "bright_cyan")))
     id_post = Prompt.ask("[magenta]ID del post[/magenta]").strip()
     if id_post == "0":
         console.print("[yellow]Operación cancelada.[/yellow]")
@@ -669,12 +670,12 @@ def onboarding_inicio() -> bool:
         opciones = Table.grid(padding=(0, 2))
         opciones.add_column(justify="right", style="bold yellow")
         opciones.add_column(justify="left")
-        opciones.add_row("1", "Iniciar sesión")
-        opciones.add_row("2", "Registrarse")
-        opciones.add_row("0", "Salir")
+        opciones.add_row("1", "[yellow]★[/yellow] Iniciar sesión")
+        opciones.add_row("2", "[yellow]★[/yellow] Registrarse")
+        opciones.add_row("0", "[yellow]★[/yellow] Salir")
         panel = Panel(
             opciones,
-            title="[bold cyan]Inicio[/bold cyan]",
+            title=glam_title("Inicio", "bright_cyan"),
             border_style="bright_cyan",
         )
         console.print(panel)
@@ -700,15 +701,9 @@ def onboarding_inicio() -> bool:
 
 
 def registrar_ui() -> bool:
-    """
-    Flujo de registro de autor con configuración de contraseña.
-
-    Returns:
-        bool: True si se registró e inició sesión; False si se canceló o falló.
-    """
     console.print(
         Panel.fit(
-            "[bold cyan]Registro de Autor[/bold cyan]",
+            glam_title("Registro de Autor", "bright_cyan"),
             border_style="bright_blue",
         )
     )
@@ -767,15 +762,9 @@ def registrar_ui() -> bool:
 
 
 def crear_autor_ui() -> None:
-    """
-    Crea un autor desde la UI y permite configurar su contraseña.
-
-    Returns:
-        None
-    """
     console.print(
         Panel.fit(
-            "[bold cyan]Crear Autor[/bold cyan]",
+            glam_title("Crear Autor", "bright_cyan"),
             border_style="bright_blue",
         )
     )
@@ -814,15 +803,9 @@ def crear_autor_ui() -> None:
 
 
 def ver_autores_ui() -> None:
-    """
-    Lista todos los autores en una tabla.
-
-    Returns:
-        None
-    """
     console.print(
         Panel.fit(
-            "[bold cyan]Lista de Autores[/bold cyan]",
+            glam_title("Lista de Autores", "bright_cyan"),
             border_style="bright_blue",
         )
     )
@@ -835,18 +818,9 @@ def ver_autores_ui() -> None:
 
 
 def actualizar_autor_ui() -> None:
-    """
-    Actualiza los datos del autor en sesión (nombre y email).
-
-    Returns:
-        None
-
-    Raises:
-        Cancelado: Si el usuario cancela durante la edición.
-    """
     console.print(
         Panel.fit(
-            "[bold cyan]Actualizar Autor[/bold cyan]",
+            glam_title("Actualizar Autor", "bright_cyan"),
             border_style="bright_blue",
         )
     )
@@ -908,15 +882,9 @@ def actualizar_autor_ui() -> None:
 
 
 def eliminar_autor_ui() -> None:
-    """
-    Elimina la cuenta del autor en sesión (y cierra sesión).
-
-    Returns:
-        None
-    """
     console.print(
         Panel.fit(
-            "[bold cyan]Eliminar Autor[/bold cyan]",
+            glam_title("Eliminar Autor", "bright_cyan"),
             border_style="bright_blue",
         )
     )
@@ -967,13 +935,13 @@ def menu_autores() -> None:
     while True:
         console.print(
             Panel(
-                "[bold yellow]1[/bold yellow]. Crear autor\n"
-                "[bold yellow]2[/bold yellow]. Ver autores\n"
-                "[bold yellow]3[/bold yellow]. Actualizar autor\n"
-                "[bold yellow]4[/bold yellow]. Eliminar autor\n"
-                "[bold yellow]5[/bold yellow]. Volver",
-                title="[bold cyan]Autores[/bold cyan]",
-                border_style="bright_blue",
+                "[bold yellow]★ 1[/bold yellow]. Crear autor\n"
+                "[bold yellow]★ 2[/bold yellow]. Ver autores\n"
+                "[bold yellow]★ 3[/bold yellow]. Actualizar autor\n"
+                "[bold yellow]★ 4[/bold yellow]. Eliminar autor\n"
+                "[bold yellow]★ 5[/bold yellow]. Volver",
+                title=glam_title("Autores", "bright_red"),
+                border_style="bright_red",
             )
         )
         opcion = Prompt.ask(
@@ -1007,8 +975,11 @@ def menu_sesion() -> None:
             f"<{escape(Sesion.email or '')}> (ID {escape(str(Sesion.id_autor or ''))})"
         )
         console.print(
-            Panel(estado, title="[bold cyan]Sesión[/bold cyan]"
-                  , border_style="bright_cyan")
+            Panel(
+                estado,
+                title=glam_title("Sesión", "orange1"),
+                border_style="orange1",
+            )
         )
         if Confirm.ask("[magenta]¿Desea cerrar sesión ahora?[/magenta]", default=True):
             Sesion.limpiar()
@@ -1021,8 +992,8 @@ def menu_sesion() -> None:
         console.print(
             Panel(
                 "[yellow]No hay sesión activa.[/yellow]\nInicie sesión para continuar.",
-                title="[bold cyan]Sesión[/bold cyan]",
-                border_style="bright_cyan",
+                title=glam_title("Sesión", "orange1"),
+                border_style="orange1",
             )
         )
         iniciar_sesion_ui()
@@ -1040,7 +1011,8 @@ def iniciar_sesion_ui() -> bool:  # noqa: PLR0911, PLR0915
         bool: True si inicia sesión correctamente; False en caso contrario.
     """
     console.print(
-        Panel.fit("[bold cyan]Iniciar Sesión[/bold cyan]", border_style="bright_cyan")
+        Panel.fit(glam_title("Iniciar Sesión", "bright_cyan")
+                  , border_style="bright_cyan")
     )
     try:
         email = pedir_obligatorio("Email", to_lower=True)
@@ -1134,15 +1106,15 @@ def menu_publicaciones() -> None:
     while True:
         console.print(
             Panel(
-                "[bold yellow]1[/bold yellow]. Crear post \n"
-                "[bold yellow]2[/bold yellow]. Listar posts de un autor\n"
-                "[bold yellow]3[/bold yellow]. Buscar posts por tag\n"
-                "[bold yellow]4[/bold yellow]. Editar mi post "
+                "[bold yellow]★ 1[/bold yellow]. Crear post \n"
+                "[bold yellow]★ 2[/bold yellow]. Listar posts de un autor\n"
+                "[bold yellow]★ 3[/bold yellow]. Buscar posts por tag\n"
+                "[bold yellow]★ 4[/bold yellow]. Editar mi post "
                 "(requiere sesión)\n"
-                "[bold yellow]5[/bold yellow]. Eliminar mi post \n"
-                "[bold yellow]6[/bold yellow]. Volver",
-                title="[bold cyan]Publicaciones[/bold cyan]",
-                border_style="bright_blue",
+                "[bold yellow]★ 5[/bold yellow]. Eliminar mi post \n"
+                "[bold yellow]★ 6[/bold yellow]. Volver",
+                title=glam_title("Publicaciones", "bright_yellow"),
+                border_style="bright_yellow",
             )
         )
         opcion = Prompt.ask(
@@ -1178,7 +1150,7 @@ def crear_post_ui() -> None:
 
     console.print(
         Panel.fit(
-            "[bold cyan]Crear Publicación[/bold cyan]"
+            glam_title("Crear Publicación", "bright_cyan")
             , border_style="bright_blue")
     )
     try:
@@ -1211,7 +1183,7 @@ def listar_posts_de_autor_ui() -> None:
     """
     console.print(
         Panel.fit(
-            "[bold cyan]Posts por Autor[/bold cyan]",
+            glam_title("Posts por Autor", "bright_cyan"),
             border_style="bright_blue",
         )
     )
@@ -1266,7 +1238,7 @@ def buscar_post_por_tag_ui() -> None:
     """
     console.print(
         Panel.fit(
-            "[bold cyan]Buscar Posts por Tag[/bold cyan]\n",
+            glam_title("Buscar Posts por Tag", "bright_cyan") + "\n",
             border_style="bright_blue",
         )
     )
@@ -1385,17 +1357,8 @@ def _recolectar_tags_conteo():
 
 
 def _tabla_tags(tags_conteo) -> Table:
-    """
-    Construye la tabla de tags con su número de usos.
-
-    Args:
-        tags_conteo: Secuencia de pares (tag, conteo).
-
-    Returns:
-        Table: Tabla formateada para impresión.
-    """
     tabla = Table(
-        title="Tags disponibles",
+        title=glam_title("Tags disponibles", "bright_cyan"),
         border_style="blue",
         show_header=True,
         header_style="bold magenta",
@@ -1434,17 +1397,8 @@ def _recolectar_mis_comentarios() -> List[Dict[str, Any]]:
 
 
 def _tabla_mis_comentarios(mis: List[Dict[str, Any]]) -> Table:
-    """
-    Construye una tabla con los comentarios del autor en sesión.
-
-    Args:
-        mis: Lista de comentarios propios.
-
-    Returns:
-        Table: Tabla formateada con comentarios.
-    """
     tabla = Table(
-        title="Mis Comentarios",
+        title=glam_title("Mis Comentarios", "bright_cyan"),
         border_style="blue",
         show_header=True,
         header_style="bold magenta",
@@ -1512,7 +1466,7 @@ def editar_post_ui() -> None:  # noqa: PLR0911, PLR0912, PLR0915
 
     console.print(
         Panel.fit(
-            "[bold cyan]Editar Publicación[/bold cyan]", border_style="bright_blue"
+            glam_title("Editar Publicación", "bright_cyan"), border_style="bright_blue"
         )
     )
 
@@ -1606,7 +1560,8 @@ def eliminar_post_ui() -> None:
 
     console.print(
         Panel.fit(
-            "[bold cyan]Eliminar Publicación[/bold cyan]\n", border_style="bright_blue"
+            glam_title("Eliminar Publicación", "bright_cyan") +
+            "\n", border_style="bright_blue"
         )
     )
 
@@ -1661,7 +1616,7 @@ def eliminar_comentario_ui() -> None:  # noqa: PLR0912
     """
     console.print(
         Panel.fit(
-            "[bold cyan]Eliminar Comentario[/bold cyan]",
+            glam_title("Eliminar Comentario", "bright_magenta"),
             border_style="bright_magenta",
         )
     )
@@ -1742,7 +1697,7 @@ def agregar_comentario_ui() -> None:  # noqa: PLR0911
 
     console.print(
         Panel.fit(
-            "[bold cyan]Agregar Comentario[/bold cyan]",
+            glam_title("Agregar Comentario", "bright_magenta"),
             border_style="bright_magenta",
         )
     )
@@ -1996,7 +1951,7 @@ def editar_comentario_ui() -> None:
 
     console.print(
         Panel.fit(
-            "[bold cyan]Editar Comentario[/bold cyan]",
+            glam_title("Editar Comentario", "bright_magenta"),
             border_style="bright_magenta",
         )
     )
@@ -2040,12 +1995,12 @@ def menu_comentarios() -> None:
     while True:
         console.print(
             Panel(
-                "[bold yellow]1.[/bold yellow]Agregar comentario\n"
-                "[bold yellow]2.[/bold yellow] Editar mi comentario\n"
-                "[bold yellow]3.[/bold yellow] Eliminar mi comentario\n"
-                "[bold yellow]4.[/bold yellow] Volver",
-                title="[bold cyan]Comentarios[/bold cyan]",
-                border_style="bright_blue",
+                "[bold yellow]★ 1.[/bold yellow] Agregar comentario\n"
+                "[bold yellow]★ 2.[/bold yellow] Editar mi comentario\n"
+                "[bold yellow]★ 3.[/bold yellow] Eliminar mi comentario\n"
+                "[bold yellow]★ 4.[/bold yellow] Volver",
+                title=glam_title("Comentarios", "bright_magenta"),
+                border_style="bright_magenta",
             )
         )
         opcion = Prompt.ask(
@@ -2084,19 +2039,21 @@ def mostrar_menu_principal() -> None:
     )
     console.print(
         Panel(
-            "[bold cyan]Bienvenido a Nuestro Blog Multi-usuario[/bold cyan]\n"
-            "[bold cyan]1)[/bold cyan] [bold yellow]Publicaciones (POSTS)"
-            "[/bold yellow]\n"
-            "[bold cyan]2)[/bold cyan] [bold yellow]Comentarios[/bold yellow]\n"
-            "[bold cyan]3)[/bold cyan] [bold yellow]Autores[/bold yellow]\n"
-            "[bold cyan]4)[/bold cyan] [bold yellow]Sesión[/bold yellow]",
-            title="[bold cyan]MENÚ PRINCIPAL[/bold cyan]",
+            f"{starbar(color='bright_magenta')}\n"
+            f"{glam_title('Bienvenido a Nuestro Blog Multi-usuario', 'bright_cyan')}\n"
+            f"[bold cyan]★ 1)[/bold cyan] [bold yellow]Publicaciones (POSTS)"
+            f"[/bold yellow]\n"
+            f"[bold cyan]★ 2)[/bold cyan] [bold yellow]Comentarios[/bold yellow]\n"
+            f"[bold cyan]★ 3)[/bold cyan] [bold yellow]Autores[/bold yellow]\n"
+            f"[bold cyan]★ 4)[/bold cyan] [bold yellow]Sesión[/bold yellow]\n"
+            f"{starbar(color='bright_yellow')}",
+            title=glam_title("Menú Principal", "bright_cyan"),
             border_style="bright_cyan",
             subtitle=sesion_txt,
             subtitle_align="right",
         )
     )
-    console.print("[bold red]5. Salir[/bold red]")
+    console.print("[bold red]★ 5. Salir[/bold red]")
 
 
 def main() -> None:
