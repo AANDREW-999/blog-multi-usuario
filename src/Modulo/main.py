@@ -39,11 +39,37 @@ console = Console()
 STAR_PATTERN = "✦★✶"
 
 def starbar(width: Optional[int] = None, color: str = "magenta") -> str:
+    """
+    Genera una barra decorativa formada por un patrón repetido de estrellas.
+
+    Si no se especifica width se usa el ancho de la consola; se garantiza
+    un mínimo visual y se recorta para evitar desbordes.
+
+    Args:
+        width: Ancho máximo de la barra; None para usar console.width.
+        color: Nombre de color Rich aplicado a toda la línea.
+
+    Returns:
+        str: Cadena con markup Rich coloreado lista para imprimir.
+    """
     w = width or console.width
     line = (STAR_PATTERN * ((w // len(STAR_PATTERN)) + 1))[: max(24, w - 4)]
     return f"[{color}]{line}[/{color}]"
 
 def glam_title(text: str, color: str = "cyan") -> str:
+    """
+    Crea un título “glam” en mayúsculas rodeado de estrellas amarillas.
+
+    Reemplaza el uso de emojis por una estrella estándar y aplica negrita
+    con el color principal indicado.
+
+    Args:
+        text: Texto base del título (se convierte a mayúsculas).
+        color: Color Rich principal para el bloque en negrita.
+
+    Returns:
+        str: Cadena con markup Rich lista para console.print().
+    """
     # Reemplaza ✨ (emoji) por estrella no emoji coloreada
     return (f"[bold {color}][yellow]★[/yellow] {text.upper()} "
             f"[yellow]★[/yellow][/bold {color}]")
